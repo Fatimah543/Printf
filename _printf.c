@@ -1,71 +1,66 @@
 #include "main.h"
 
+void print_buffer(char buffer[], int *buff_ind);
 
 /**
  * _printf - Printf function
  * @format: format.
- * Return: Printed chars.
+ * Return: Printed chars..
  */
+int _printf(const char *format, ...)
+{
+	int i, printed = 0, printed_chars = 0;
+	int flags, width, precision, size, buff_ind = 0;
+	va_list list;
+	char buffer[BUFF_SIZE];
 
+	if (format == NULL)
+		return (-1);
 
-int _printf(const char *format, ...){
+	va_start(list, format);
 
-   int char_word =0;
+	for (i = 0; format && format[i] != '\0'; i++)
+	{
+		if (format[i] != '%')
+		{
+			buffer[buff_ind++] = format[i];
+			if (buff_ind == BUFF_SIZE)
+				print_buffer(buffer, &buff_ind);
+			/* write(1, &format[i], 1);*/
+			printed_chars++;
+		}
+		else
+		{
+			print_buffer(buffer, &buff_ind);
+			flags = get_flags(format, &i);
+			width = get_width(format, &i, list);
+			precision = get_precision(format, &i, list);
+			size = get_size(format, &i);
+			++i;
+			printed = handle_print(format, &i, list, buffer,
+				flags, width, precision, size);
+			if (printed == -1)
+				return (-1);
+			printed_chars += printed;
+		}
+	}
 
-   va_list (argu_ments);
+	print_buffer(buffer, &buff_ind);
 
-   if (format == NULL){
-      return (-1);
-   }
+	va_end(list);
 
-
-   va_start(argu_ments, format);
-
-
-   while (*format){
-      if(*format != '%'){
-         write(1, format, 1);
-         char_word++;
-      }
-      else{
-         format++;
-         if(*format == '\0'){
-         break;
-         }
-         if(*format == '%'){
-            write(1, format, 1);
-            char_word++;
-         }
-         else if(*format == 'c'){
-         char c = va_arg(argu_ments, int);
-         write(1, &c, 1);
-         char_word++;
-         }
-         
-         else if(*format == 's'){
-            char *str = va_arg(argu_ments, char*);
-            int str_len = 0;
-
-            while (str[str_len] != '\0')
-            str_len++;
-            
-            write(1, str, str_len);
-            char_word += str_len;
-         }
-      }
-
-      format++;
-   }
-
-   va_end(argu_ments);
-
-   return char_word;
+	return (printed_chars);
 }
 
-int main(){
-   _printf("fatimah\n");
-   _printf("%c\n", 'F');
-   _printf("%s\n", "string");
-   _printf("%%\n");
-   return 0;
+/**
+ * print_buffer - Prints the contents of the buffer if it exist
+ * @buffer: Array of chars
+ * @buff_ind: Index at which to add next char, represents the length.
+ */
+void print_buffer(char buffer[], int *buff_ind)
+{
+	if (*buff_ind > 0)
+		write(1, &buffer[0], *buff_ind);
+
+	*buff_ind = 0;
 }
